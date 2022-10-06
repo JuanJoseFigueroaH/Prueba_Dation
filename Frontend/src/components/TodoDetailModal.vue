@@ -76,7 +76,7 @@
                     >
                       <i class="fa fa-exclamation" aria-hidden="true"></i>
                       <i class="fa fa-exclamation" aria-hidden="true"></i>
-                      <i class="fa fa-exclamation mr-2" aria-hidden="true"></i>Priority
+                      <i class="fa fa-exclamation mr-2" aria-hidden="true"></i>Prioridad
                     </a>
                   </li>
                   <li class="nav-item">
@@ -89,7 +89,7 @@
                       aria-controls="tabs-icons-text-3"
                       aria-selected="false"
                     >
-                      <i class="fa fa-tags mr-2" aria-hidden="true"></i>Tags
+                      <i class="fa fa-tags mr-2" aria-hidden="true"></i>Etiquetas
                     </a>
                   </li>
                 </ul>
@@ -181,25 +181,8 @@
                 >
                   <div class="card shadow">
                     <div class="card-body">
-                      <div class="new-tag">
-                        <div class="row">
-                          <div class="col-md-12">
-                            <div class="form-group">
-                              <input
-                                type="text"
-                                class="form-control form-control-alternative"
-                                id="exampleFormControlInput1"
-                                placeholder="Enter tag"
-                                autocomplete="off"
-                                v-model="searchText"
-                                v-on:keydown.enter="createNewTag(searchText)"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
                       <ul class="tags-wrapper">
-                        <li class="tag-item" v-for="(tag, key) in searchTag" :key="key">
+                        <li class="tag-item" v-for="(tag, key) in tags" :key="key">
                           <div class="color-option-icon">
                             <i
                               class="fa fa-ellipsis-v"
@@ -216,7 +199,6 @@
                                   v-for="(color, index) in colorPalete"
                                   :key="index"
                                   :style="{background:color}"
-                                  @click="setTagColor(key, $event)"
                                 ></a>
                               </div>
                             </div>
@@ -235,7 +217,7 @@
                                 class="custom-control-input"
                                 :id="key"
                                 type="checkbox"
-                                v-model="taskDetail.tags"
+                                v-model="taskDetail.tag"
                                 :value="tag"
                               />
                               <label class="custom-control-label" :for="key">
@@ -244,11 +226,6 @@
                             </div>
                           </div>
                         </li>
-                        <li
-                          v-if="searchTag.length<=0"
-                          class="tag-item mark"
-                          @click="createNewTag(searchText)"
-                        >Create "{{searchText}}"</li>
                       </ul>
                     </div>
                   </div>
@@ -258,8 +235,8 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" @click="saveTaskData">Save changes</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" @click="saveTaskData">Guardar Cambios</button>
           </div>
         </div>
       </div>
@@ -272,6 +249,7 @@ import { Bus } from "./utils/bus";
 import ClickOutside from "vue-click-outside";
 import vueStore from "./store/index";
 import { mapActions, mapGetters } from "vuex";
+import axios from "axios";
 export default {
   name: "todoDetailModal",
   data() {
@@ -285,6 +263,7 @@ export default {
       showDescriptionBtn: true,
       taskPriority: null,
       searchText: "",
+      tags:[]
     };
   },
   components: {
@@ -294,14 +273,16 @@ export default {
     ClickOutside
   },
   computed: {
-    ...mapGetters(["colorPalete", "getAllTags"]),
-    searchTag() {
-      return vueStore.getters.filterTags(this.searchText);
-    }
+    ...mapGetters(["colorPalete"]),
   },
-
   methods: {
     ...mapActions(["addNewTag", "changeTagColor", "updateTodoTags"]),
+    getTags(){
+      axios.get("http://localhost:3015/api/v1/tags/getAll")
+        .then(response => {
+          this.tags = response.data.tags;
+        })
+    },
     saveTaskData() {
       if (this.taskDetail.priority) {
         if (this.taskDetail.priority === "High")
@@ -313,10 +294,12 @@ export default {
         if (this.taskDetail.priority === "None")
           this.taskDetail.priorityColor = "#11cdef";
       }
-      this.updateTodoTags({
-        id: this.taskDetail.id,
-        tags: this.taskDetail.tags
-      });
+      console.log(this.taskDetail);
+
+      axios.put(`http://localhost:3015/api/v1/tasks/edit/${this.taskDetail.id}`, this.taskDetail)
+        .then(response => {
+          this.showNotification('¡Tarea Modificada Correctamente!', 'alert-success');
+        })
       $("#genericPopup").modal("hide");
     },
     editTodoTitle() {
@@ -343,14 +326,6 @@ export default {
       this.showDescriptionBtn = !this.showDescriptionBtn;
       this.showDescription = !this.showDescription;
     },
-    createNewTag(newTagName) {
-      this.addNewTag(newTagName);
-      this.searchText = "";
-    },
-    setTagColor(key, $event) {
-      this.changeTagColor({ key, color: $event.target.style.backgroundColor });
-    },
-    setTaskPriority() {},
     resetModal() {
       this.showAddDecriptionField = false;
       this.showEditTodoTitleField = false;
@@ -363,10 +338,20 @@ export default {
       $(".tab-pane, .nav-item a").removeClass("active show");
     },
     showModal(data) {
+      this.tags = [];
+      this.getTags();
       this.taskDetail = data;
       this.resetModal();
       $("#genericPopup").modal("show");
-    }
+    },
+    showNotification(msg, alertType) {
+      this.$notify({
+        group: "foo",
+        text: `<div class="alert ${alertType}" role="alert">${msg}</div> `,
+        position: "top left",
+        duration: 2000
+      });
+    },
   },
   mounted() {
     Bus.$on("showDetailedTaskModal", this.showModal);

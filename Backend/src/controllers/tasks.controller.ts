@@ -12,6 +12,8 @@ class TasksControler extends BaseController {
         priorityColor: true,
         completed: true,
         created_at: true,
+        responsible_id: true,
+        description: true,
         taskTag: {
           select: { tag: true }
         }
@@ -21,7 +23,12 @@ class TasksControler extends BaseController {
       }
     });
 
+    const tag = [];
     tasks.map(function (task) {
+      task.taskTag.map(function (taskTag) {
+        tag.push(taskTag.tag);
+      })
+      task.tag = tag;
       task.created_at = moment(task.created_at).format('YYYY-MM-DD');
     });
 
@@ -37,6 +44,63 @@ class TasksControler extends BaseController {
       where: { id: parseInt(id) },
       data
     });
+    res.status(200).send(tasks);
+  };
+
+  public edit = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const data = {
+      title: req.body.title,
+      description: req.body.description,
+      priority: req.body.priority,
+      responsible_id: req.body.responsible_id
+    }
+
+    const tasks = await this.db.tasks.update({
+      where: { id: parseInt(id) },
+      data
+    });
+
+    await Promise.all(req.body.taskTag.map(async (tag: any) => {
+      await this.db.tasksTags.update({
+        where: { id: parseInt(tag.tag.id) },
+        data: {
+          deleted: true
+        }
+      });
+    }));
+
+    await Promise.all(req.body.tag.map(async (tag: any) => {
+      await this.db.tasksTags.create({
+        data: {
+          task_id: parseInt(id),
+          tag_id: tag.id
+        }
+      });
+    }));
+
+    res.status(200).send(tasks);
+  };
+
+  public delete = async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    const tasks = await this.db.tasks.update({
+      where: { id: parseInt(id) },
+      data: { deleted: true }
+    });
+
+    if (req.body.length > 0) {
+      await Promise.all(req.body.map(async (tag: any) => {
+        await this.db.tasksTags.update({
+          where: { id: parseInt(tag.tag.id) },
+          data: {
+            deleted: true
+          }
+        });
+      }));
+    }
+
     res.status(200).send(tasks);
   };
 }

@@ -36,10 +36,10 @@
             <span class="badge badge-primary">Total : {{toDoList.length || 0}}</span>
           </div>
           <div class="col-4">
-            <span class="badge badge-success">Success : {{completedTodos.length || 0}}</span>
+            <span class="badge badge-success">Cumplidas : {{completedTodos.length || 0}}</span>
           </div>
           <div class="col-4">
-            <span class="badge badge-warning">Pending : {{pendingTodos.length || 0}}</span>
+            <span class="badge badge-warning">Pendientes : {{pendingTodos.length || 0}}</span>
           </div>
           <div class="col-md-12 mt-3">
             <div class="form-group">
@@ -127,7 +127,7 @@
                       >{{ todo.completed ? 'check_box' : 'check_box_outline_blank' }}</i>
                     </button>
                     <button
-                      @click.stop="removeTodo(key)"
+                      @click.stop="removeTodo(todo.id, todo.taskTag)"
                       type="button"
                       aria-label="Delete"
                       title="Delete"
@@ -222,7 +222,7 @@ export default {
     ...mapGetters(["getTodos", "getUserData"])
   },
   methods: {
-    ...mapActions(["createNewTodo", "markAsComplete", "deleteTodo"]),
+    ...mapActions(["createNewTodo"]),
     toggleFullScreen() {
       !this.isFullScreen ? this.openFullscreen() : this.closeFullscreen();
     },
@@ -281,13 +281,16 @@ export default {
       axios.get("http://localhost:3015/api/v1/tasks/getAll")
         .then(response => {
           this.toDoList = response.data.tasks;
+          this.completedTodos = this.toDoList.filter(item => item.completed);
+          this.pendingTodos = this.toDoList.filter(item => !item.completed);
         })
-      this.completedTodos = this.toDoList.filter(item => item.completed);
-      this.pendingTodos = this.toDoList.filter(item => !item.completed);
     },
-    removeTodo(key) {
-      this.deleteTodo(key);
-      this.updateTodos();
+    removeTodo(id, tags) {
+       axios.put(`http://localhost:3015/api/v1/tasks/delete/${id}`, tags)
+          .then(response => {
+            this.showNotification('¡Tarea Eliminada Correctamente!', 'alert-success');
+            this.updateTodos();
+          })
     },
     completeTodo(id, completed) {
       axios.put(`http://localhost:3015/api/v1/tasks/updateCompleted/${id}`, {completed: completed})
@@ -297,7 +300,6 @@ export default {
           } else {
             this.showNotification('¡Tarea Se Ha Colocado En Pendiente Correctamente!', 'alert-success');
           }
-
           this.updateTodos();
         })
     },

@@ -20,6 +20,34 @@ tasksRoute.get(
 
 /**
  * @swagger
+ * /tasks/edit/{id}:
+ *   put:
+ *     description:
+ *       "Edit Task"
+ *     tags:
+ *       - Tasks
+ */
+tasksRoute.put(
+  '/edit/:id',
+  tasksController.edit
+);
+
+/**
+ * @swagger
+ * /tasks/delete/{id}:
+ *   put:
+ *     description:
+ *       "Delete Task"
+ *     tags:
+ *       - Tasks
+ */
+tasksRoute.put(
+  '/delete/:id',
+  tasksController.delete
+);
+
+/**
+ * @swagger
  * /tasks/updateCompleted/{id}:
  *   put:
  *     description:
