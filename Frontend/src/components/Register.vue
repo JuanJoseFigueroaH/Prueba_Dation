@@ -6,15 +6,15 @@
           <div class="col-lg-8 order-lg-1 mt-0">
             <div class="card bg-gradient-secondary shadow shadow-lg--hover mt-5">
               <form class="card-body p-lg-5" @submit="registerForm">
-                <h4 class="mb-1">Register</h4>
-                <p class="mt-0">To access some of the coolest & awesome projects.</p>
+                <h4 class="mb-1">Registro</h4>
+                <p class="mt-0">Para acceder a algunos de los mejores e impresionantes proyectos.</p>
                 <div class="form-group mt-3">
                   <div class="input-group input-group-alternative">
                     <input
                       class="form-control"
-                      placeholder="First Name"
+                      placeholder="Nombres"
                       type="text"
-                      v-model="userInfo.fname"
+                      v-model="userInfo.first_name"
                     >
                   </div>
                 </div>
@@ -22,9 +22,9 @@
                   <div class="input-group input-group-alternative">
                     <input
                       class="form-control"
-                      placeholder="Last Name"
+                      placeholder="Apellidos"
                       type="text"
-                      v-model="userInfo.lname"
+                      v-model="userInfo.last_name"
                     >
                   </div>
                 </div>
@@ -32,9 +32,9 @@
                   <div class="input-group input-group-alternative">
                     <input
                       class="form-control"
-                      placeholder="Contact Number"
+                      placeholder="Numero de Contacto"
                       type="text"
-                      v-model="userInfo.contact"
+                      v-model="userInfo.phone"
                     >
                   </div>
                 </div>
@@ -42,7 +42,7 @@
                   <div class="input-group input-group-alternative">
                     <input
                       class="form-control"
-                      placeholder="Your Email address"
+                      placeholder="Correo Electronico"
                       type="email"
                       v-model="userInfo.email"
                     >
@@ -52,17 +52,17 @@
                   <div class="input-group input-group-alternative">
                     <input
                       class="form-control"
-                      placeholder="Your Password"
+                      placeholder="Contraseña"
                       type="password"
                       v-model="userInfo.password"
                     >
                   </div>
                 </div>
                 <div>
-                  <button type="submit" class="btn btn-success btn-round btn-block btn-lg">Sign up</button>
+                  <button type="submit" class="btn btn-success btn-round btn-block btn-lg">Registrarte</button>
                 </div>
                 <router-link to="/login" class="register-link">
-<span class="nav-link-inner--text">Already Registered? </span>
+                <span class="nav-link-inner--text">Ya esta registrado? </span>
               </router-link>
               </form>
             </div>
@@ -77,15 +77,14 @@
 
 <script>
 import axios from 'axios'
-import firebase from 'firebase'
 export default {
   name: "Register",
   data() {
     return {
       userInfo: {
-        fname: "",
-        lname: "",
-        contact: "",
+        first_name: "",
+        last_name: "",
+        phone: "",
         email: "",
         password: ""
       }
@@ -94,29 +93,11 @@ export default {
   methods: {
     registerForm(e) {
       e.preventDefault();
-      console.log("form submit", this.userInfo);
-      firebase.auth().createUserWithEmailAndPassword(this.userInfo.email, this.userInfo.password).then(
-          (user) =>{
-              console.log(user)
-          },
-          (err) => {
-              console.log(err)
-          }
-      )
-    //   axios({
-    //     method: "post",
-    //     url: "http://localhost:5000/api/register",
-    //     data: this.userInfo,
-    //     config: { headers: { "Content-Type": "application/json" } }
-    //   })
-    //     .then(function(response) {
-    //       //handle success
-    //       console.log(response);
-    //     })
-    //     .catch(function(response) {
-    //       //handle error
-    //       console.log(response);
-    //     });
+      axios.post("http://localhost:3015/api/v1/users/register", this.userInfo)
+        .then(response => {
+          localStorage.setItem("token", response.data.token);
+          this.$router.replace("to-do-list");
+        })
     }
   }
 };

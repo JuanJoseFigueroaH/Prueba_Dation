@@ -31,4 +31,22 @@ usersRoute.post(
   usersController.login
 );
 
+/**
+ * @swagger
+ * /users/register:
+ *  post:
+ *    description: Register user
+ *    tags:
+ *      - Users
+ *    produces:
+ *      - application/json
+ */
+usersRoute.post(
+  '/register',
+  /* usersValidator.login,
+    usersValidator.validateIfUserExists,
+    validateRequest, */
+  usersController.register
+);
+
 export default usersRoute;

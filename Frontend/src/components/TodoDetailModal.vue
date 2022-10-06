@@ -338,7 +338,6 @@ export default {
       $(".tab-pane, .nav-item a").removeClass("active show");
     },
     showModal(data) {
-      this.tags = [];
       this.getTags();
       this.taskDetail = data;
       this.resetModal();

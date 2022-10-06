@@ -6,7 +6,7 @@
         <div class="row mb-3">
           <div class="col-6">
             <h1>{{title}}</h1>
-            <p>{{userData.name}}</p>
+            <p>{{payloadUser.first_name}} {{payloadUser.last_name}}</p>
           </div>
           <div class="col-6 text-right">
             <div class="user-icon">
@@ -20,7 +20,7 @@
                   class="dropdown-toggle img-fluid"
                 />
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                  <a class="dropdown-item" href="#" v-if="userLoggedIn">Logout</a>
+                  <a class="dropdown-item" href="#" v-if="userLoggedIn" @click="logout()">Logout</a>
                   <a
                     class="dropdown-item"
                     href="#"
@@ -78,6 +78,9 @@
                   </div>
                   <div class="todo-info">
                     <span class="label todo-title">{{todo.title}}</span>
+                  </div>
+                  <div class="todo-responsible">
+                    <span class="label todo-title">{{todo.responsible.first_name}} {{todo.responsible.last_name}}</span>
                   </div>
                   <div class="todo-priority">
                     <div class="priority-dot" :style="{background:todo.priorityColor}"></div>
@@ -141,22 +144,6 @@
             </draggable>
           </VuePerfectScrollbar>
         </ul>
-        <div class="todo-footer" v-if="getTodos.length >0">
-          <ul>
-            <div class="actions">
-              <button
-                @click="clearTodos"
-                type="button"
-                aria-label="Delete"
-                title="Delete"
-                class="btn-picto"
-              >
-                Clear All
-                <i aria-hidden="true" class="material-icons">delete</i>
-              </button>
-            </div>
-          </ul>
-        </div>
       </main>
     </section>
     <notifications group="foo" position="top right" class="my-style" width="400" />
@@ -173,9 +160,7 @@ import moment from "moment";
 import navbar from "./Navbar";
 import todoDetailModal from "./TodoDetailModal";
 import { Bus } from "./utils/bus";
-import { mapActions, mapGetters } from "vuex";
-
-const uuidv4 = require("uuid/v4");
+import jwt from 'jsonwebtoken';
 
 export default {
   components: {
@@ -199,7 +184,8 @@ export default {
       userLoggedIn: false,
       priorityColor: null,
       userData: {},
-      userInfo: ""
+      userInfo: "",
+      payloadUser: {}
     };
   },
   mounted() {},
@@ -207,6 +193,7 @@ export default {
     isFullScreen: function(newValue, oldValue) {}
   },
   created() {
+    this.payloadUser = jwt.verify(localStorage.getItem("token"), "nnnoot32t0ng0n09whq98r32");
     this.userLoggedIn = true;
     let that = this;
     document.onfullscreenchange = function(event) {
@@ -218,11 +205,7 @@ export default {
     };
     this.updateTodos();
   },
-  computed: {
-    ...mapGetters(["getTodos", "getUserData"])
-  },
   methods: {
-    ...mapActions(["createNewTodo"]),
     toggleFullScreen() {
       !this.isFullScreen ? this.openFullscreen() : this.closeFullscreen();
     },
@@ -273,10 +256,6 @@ export default {
         Bus.$emit("showDetailedTaskModal", todoItem);
       }
     },
-    clearTodos() {
-      this.$store.state.todos = [];
-      this.updateTodos();
-    },
     updateTodos() {
       axios.get("http://localhost:3015/api/v1/tasks/getAll")
         .then(response => {
@@ -304,28 +283,26 @@ export default {
         })
     },
     addnewTodo(e) {
+
       if (this.newTodoText.length > 0) {
         e.preventDefault();
         let newTodo = {
-          completed: false,
-          id: uuidv4(),
           title: this.newTodoText,
-          description: null,
-          inDate: moment().format("MMM D"),
-          priority: "None",
-          tags: [],
-          priorityColor: "#11cdef"
+          priorityColor: "#f5365c",
+          priority: "Medium",
+          responsible_id: this.payloadUser.id
         };
-        this.createNewTodo(newTodo);
-        // this.userData.todos.push(newTodo);
-
-        // this.todos.unshift(newTodo);
-        newTodo.id++;
-        this.newTodoText = "";
-        this.updateTodos();
+        axios.post(`http://localhost:3015/api/v1/tasks/save`, newTodo)
+          .then(response => {
+            this.showNotification('¡Tarea Se Registro Correctamente!', 'alert-success');
+            this.updateTodos();
+            this.newTodoText = "";
+          })
       }
     },
-    checkLogin() {}
+    logout(){
+      this.$router.replace("/");
+    },
   }
 };
 </script>
@@ -605,7 +582,10 @@ form input,
   font-size: 20px;
 }
 .todo-info {
-  flex: 1 70%;
+  flex: 1 40%;
+}
+.todo-responsible {
+  flex: 1 20%;
 }
 .todo-date {
   font-size: 12px;
@@ -733,7 +713,7 @@ form input,
     flex-wrap: wrap;
   }
   .todo-info {
-    flex: 1 70%;
+    flex: 1 40%;
   }
   .todo-priority {
     flex: 1 25%;

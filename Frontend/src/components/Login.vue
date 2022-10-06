@@ -12,7 +12,7 @@
             <div class="card bg-gradient-secondary shadow shadow-lg--hover mt-5">
               <form class="card-body p-lg-5" @submit="login($event)">
                 <h4 class="mb-1">{{title}}</h4>
-                <p class="mt-0">To access some of the coolest & awesome projects.</p>
+                <p class="mt-0">Para acceder a algunos de los mejores e impresionantes proyectos.</p>
                 <div class="form-group mt-5">
                   <div class="input-group input-group-alternative">
                     <div class="input-group-prepend">
@@ -22,7 +22,7 @@
                     </div>
                     <input
                       class="form-control"
-                      placeholder="Your Email address"
+                      placeholder="Correo Electronico"
                       name="email"
                       type="email"
                     />
@@ -37,18 +37,18 @@
                     </div>
                     <input
                       class="form-control"
-                      placeholder="Your Password"
+                      placeholder="Contraseña"
                       name="password"
                       type="password"
                     />
                   </div>
                 </div>
                 <div>
-                  <button type="submit" class="btn btn-success btn-round btn-block btn-lg">Login</button>
+                  <button type="submit" class="btn btn-success btn-round btn-block btn-lg">Iniciar Sesión</button>
                   <div class="row d-flex align-items-center">
                     <div class="col-md-6 mt-3">
                       <router-link to="/register" class="register-link">
-                        <span class="nav-link-inner--text">New Registeration?</span>
+                        <span class="nav-link-inner--text">Nuevo Registro?</span>
                       </router-link>
                     </div>
                   </div>
@@ -66,19 +66,14 @@
 
 
 <script>
-import VueRouter from "vue-router";
-import firebase from "firebase";
-import todoDetailModal from "./TodoDetailModal";
-import { Bus } from "./utils/bus";
-import vueStore from "./store/index";
-import { mapActions, mapGetters } from "vuex";
+import { mapActions } from "vuex";
 import axios from "axios";
 
 export default {
   name: "Login",
   data: function() {
     return {
-      title: "LOGIN",
+      title: "Inicio de Sesión",
       userDetails: {
         email: null,
         password: null
@@ -97,23 +92,9 @@ export default {
       };
       axios.post("http://localhost:3015/api/v1/users/login", data)
         .then(response => {
-          console.log("Logged in", response);
+          localStorage.setItem("token", response.data.token);
           this.$router.replace("to-do-list");
         })
-      /*firebase
-        .auth()
-        .signInWithEmailAndPassword(email, password)
-        .then(
-          user => {
-            console.log(user);
-            this.saveUserData({uid:user.uid, name:user.displayName, email:user.email,displayImage:user.photoURL})
-
-            this.$router.replace("todo");
-          },
-          err => {
-            console.log(err);
-          }
-        );*/
     },
     showNotification(msg, alertType) {
       this.$notify({
@@ -123,60 +104,6 @@ export default {
         duration: 10000
       });
     },
-    sendDataToStore(user) {
-      let data = {
-        uid:user.uid,
-        name:user.displayName,
-        profileImage:user.photoURL,
-        email:user.email
-      }
-      vueStore
-        .dispatch("saveUserData", data)
-        .then(something => {
-          console.log("done");
-        })
-        .catch(error => {
-          console.log("err");
-        });
-    },
-    googleLogin() {
-      let that = this;
-      var provider = new firebase.auth.GoogleAuthProvider();
-      firebase
-        .auth()
-        .signInWithPopup(provider)
-        .then(function(result) {
-          // This gives you a Google Access Token. You can use it to access the Google API.
-          var token = result.credential.accessToken;
-          // The signed-in user info.
-          var user = result.user;
-          console.log(user);
-          that.$notify({
-            group: "foo",
-            text: `<div class="alert alert-success" role="alert">
-                            <p> Welcome ${user.displayName}</p>
-                    You are logged in as ${user.email}
-                </div> `,
-
-            position: "top left",
-            duration: 10000
-          });
-          that.sendDataToStore(user);
-          that.$router.replace("todo");
-          // ...
-        })
-        .catch(function(error) {
-          console.log(error);
-          // Handle Errors here.
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          // The email of the user's account used.
-          var email = error.email;
-          // The firebase.auth.AuthCredential type that was used.
-          var credential = error.credential;
-          that.showNotification(errorMessage, "alert-danger");
-        });
-    }
   }
 };
 </script>

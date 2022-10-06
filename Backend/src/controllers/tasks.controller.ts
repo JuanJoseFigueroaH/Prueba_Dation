@@ -3,6 +3,21 @@ import BaseController from './_base.controller';
 import moment from 'moment';
 
 class TasksControler extends BaseController {
+  public save = async (req: Request, res: Response) => {
+    const data = {
+      title: req.body.title,
+      priorityColor: req.body.priorityColor,
+      priority: req.body.priority,
+      responsible_id: req.body.responsible_id
+    };
+
+    const tasks = await this.db.tasks.create({
+      data
+    });
+
+    res.status(200).send(tasks);
+  };
+
   public getAll = async (req: Request, res: Response) => {
     const tasks = await this.db.tasks.findMany({
       select: {
@@ -12,8 +27,10 @@ class TasksControler extends BaseController {
         priorityColor: true,
         completed: true,
         created_at: true,
-        responsible_id: true,
         description: true,
+        responsible: {
+          select: { first_name: true, last_name: true }
+        },
         taskTag: {
           select: { tag: true }
         }
@@ -23,8 +40,9 @@ class TasksControler extends BaseController {
       }
     });
 
-    const tag = [];
+    let tag = [];
     tasks.map(function (task) {
+      tag = [];
       task.taskTag.map(function (taskTag) {
         tag.push(taskTag.tag);
       })

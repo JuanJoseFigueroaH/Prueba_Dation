@@ -69,4 +69,18 @@ tasksRoute.put(
   tasksController.updateCompleted
 );
 
+/**
+ * @swagger
+ * /tasks/delete/{id}:
+ *   put:
+ *     description:
+ *       "Save Task"
+ *     tags:
+ *       - Tasks
+ */
+tasksRoute.post(
+  '/save',
+  tasksController.save
+);
+
 export default tasksRoute;
