@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Users {
+  id            Int            @id @default(autoincrement())
+  first_name    String
+  last_name     String
+  phone         String?
+  email         String
+  password      String
+  token         String
+  deleted       Boolean        @default(false)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  deleted_at    DateTime?
+  task          Tasks[]
+
+  @@map(name: "users")
+}
+
+model Tasks {
+  id            Int            @id @default(autoincrement())
+  title         String
+  description   String
+  priority      String
+  priorityColor String
+  completed     Boolean        @default(false)
+  responsible   Users          @relation(fields: [responsible_id], references: [id])
+  responsible_id Int
+  taskTag       TasksTags[]
+  deleted       Boolean        @default(false)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  deleted_at    DateTime?
+
+  @@map(name: "tasks")
+}
+
+model Tags {
+  id            Int            @id @default(autoincrement())
+  name          String
+  color         String
+  taskTag       TasksTags[]
+  deleted       Boolean        @default(false)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  deleted_at    DateTime?
+
+  @@map(name: "tags")
+}
+
+model TasksTags {
+  id            Int            @id @default(autoincrement())
+  task          Tasks          @relation(fields: [task_id], references: [id])
+  task_id       Int
+  tag           Tags           @relation(fields: [tag_id], references: [id])
+  tag_id        Int
+  deleted       Boolean        @default(false)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  deleted_at    DateTime?
+
+  @@map(name: "task_tags")
+}
